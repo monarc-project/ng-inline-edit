@@ -37,6 +37,8 @@ Pass your model to ``inline-edit`` attribute on your HTML element and provide a 
   inline-edit-on-blur="cancel" // 'cancel' or 'save'
   inline-edit-on-click
   inline-edit-textarea // uses <textarea> instead <input> & disables Enter key submit
+  inline-edit-group
+  inline-edit-position
 -->
 ```
 

@@ -100,6 +100,24 @@
                 }
                 $scope.applyText(false, false);
                 break;
+              case 9: // TAB
+                var nb = 0;
+                if(event.shiftKey){ // SHIFT+TAB
+                  if($scope.position > 0){
+                    nb = $scope.position-1;
+                  }else{
+                    nb = Object.keys($scope.$parent.listElements[$scope.group]).length-1
+                  }
+                }else{
+                  if($scope.position < (Object.keys($scope.$parent.listElements[$scope.group]).length-1)){
+                    nb = $scope.position+1;
+                  }
+                }
+
+                $scope.applyText(false, false);
+
+                $scope.$parent.listElements[$scope.group][nb].editText();
+                break;
               case 27: // ESC
                 $scope.applyText(true, false);
                 break;
@@ -108,6 +126,17 @@
             }
           }
         };
+        $scope.onInputKeyDown = function(event) {
+          if (!$scope.validating) {
+            switch (event.keyCode) {
+              case 9: // TAB
+                event.preventDefault();
+                break;
+              default:
+                break;
+            }
+          }
+        }
 
         $scope.onDocumentClick = function(event) {
           if (!$scope.validating) {

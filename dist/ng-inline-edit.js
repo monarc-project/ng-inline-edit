@@ -1,6 +1,6 @@
 /**
  * ng-inline-edit v0.7.0 (http://tamerayd.in/ng-inline-edit)
- * Copyright 2015 Tamer Aydin (http://tamerayd.in)
+ * Copyright 2016 Tamer Aydin (http://tamerayd.in)
  * Licensed under MIT
  */
 (function(window, angular, undefined) {
@@ -13,7 +13,8 @@
       btnSave: '',
       btnCancel: '',
       editOnClick: false,
-      onBlur: null
+      onBlur: null,
+      defaultGroup: 'default'
     })
     .constant('InlineEditConstants', {
       CANCEL: 'cancel',
@@ -124,6 +125,24 @@
                 }
                 $scope.applyText(false, false);
                 break;
+              case 9: // TAB
+                var nb = 0;
+                if(event.shiftKey){ // SHIFT+TAB
+                  if($scope.position > 0){
+                    nb = $scope.position-1;
+                  }else{
+                    nb = Object.keys($scope.$parent.listElements[$scope.group]).length-1
+                  }
+                }else{
+                  if($scope.position < (Object.keys($scope.$parent.listElements[$scope.group]).length-1)){
+                    nb = $scope.position+1;
+                  }
+                }
+
+                $scope.applyText(false, false);
+
+                $scope.$parent.listElements[$scope.group][nb].editText();
+                break;
               case 27: // ESC
                 $scope.applyText(true, false);
                 break;
@@ -132,6 +151,17 @@
             }
           }
         };
+        $scope.onInputKeyDown = function(event) {
+          if (!$scope.validating) {
+            switch (event.keyCode) {
+              case 9: // TAB
+                event.preventDefault();
+                break;
+              default:
+                break;
+            }
+          }
+        }
 
         $scope.onDocumentClick = function(event) {
           if (!$scope.validating) {
@@ -246,6 +276,34 @@
             element
               .append(container);
 
+            var inlineEditGroup = attrs.hasOwnProperty('inlineEditGroup') ?
+              attrs.inlineEditGroup : InlineEditConfig.defaultGroup;
+            scope.group = inlineEditGroup;
+            if(scope.$parent.listElements == undefined){
+              scope.$parent.listElements = [];
+            }
+            if(scope.$parent.listElements[scope.group] == undefined){
+              scope.$parent.listElements[scope.group] = {};
+            }
+
+            var inlineEditPosition = attrs.hasOwnProperty('inlineEditPosition') ?
+              attrs.inlineEditPosition : (Object.keys(scope.$parent.listElements[scope.group]).length);
+            scope.position = parseInt(inlineEditPosition) < 0 ? 0 : parseInt(inlineEditPosition);
+            if(scope.position < Object.keys(scope.$parent.listElements[scope.group]).length && scope.$parent.listElements[scope.group][scope.position] != undefined){
+              var newElement = {};
+              for(var i in scope.$parent.listElements[scope.group]){
+                if(parseInt(i) >= scope.position){
+                  var s = scope.$parent.listElements[scope.group][i];
+                  s.position = parseInt(s.position) + 1;
+                  newElement[s.position] = s;
+                }else{
+                  newElement[i] = scope.$parent.listElements[scope.group][i];
+                }
+              }
+              scope.$parent.listElements[scope.group] = newElement;
+            }
+            scope.$parent.listElements[scope.group][scope.position] = scope;
+
             scope.editInput = input;
 
             attrs.$observe('inlineEdit', function(newValue) {
@@ -260,6 +318,20 @@
             scope.$watch('model', function(newValue) {
               if (!isNaN(parseFloat(newValue)) && isFinite(newValue) && newValue === 0) {
                 scope.model = '0';
+              }
+            });
+
+            scope.$on("$destroy",function handleDestroyEvent(){
+              var pos = parseInt(scope.position);
+              delete scope.$parent.listElements[scope.group][pos];
+              for(var i in scope.$parent.listElements[scope.group]){
+                i = parseInt(i);
+                if(i > pos){
+                  var s = scope.$parent.listElements[scope.group][i];
+                  delete scope.$parent.listElements[scope.group][i];
+                  s.position = parseInt(s.position) - 1;
+                  scope.$parent.listElements[scope.group][s.position] = s;
+                }
               }
             });
           }

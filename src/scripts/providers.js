@@ -8,7 +8,8 @@
       btnSave: '',
       btnCancel: '',
       editOnClick: false,
-      onBlur: null
+      onBlur: null,
+      defaultGroup: 'default'
     })
     .constant('InlineEditConstants', {
       CANCEL: 'cancel',
